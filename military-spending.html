@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Global Military Expenditure</title>
+  <!-- dropped in a bootstrap template for speed, can be swapped easily -->
+  <link rel="stylesheet" type="text/css" href="styles/main.min.css">
+  <!-- styles for drawing the SVG -->
+  <link rel="stylesheet" type="text/css" href="styles/d3.css">
+
+  <!-- import javascript libraries-->
+  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+  <script src="scripts/d3-tip.js"></script>
+</head>
+
+<body>
+  <div class="container-fluid">
+    <div class="row-fluid">
+      <h1>Global Military Spending for 2013</h1>
+      <div class="pull-right">
+        <p><input id="normalize" type="checkbox"> Normalize expenditures as percentage of Gross Domestic Product (GDP)</p>
+      </div>
+      <div id="chart"></div>
+    </div>
+
+    <script>
+      // begin D3 code here
+      var margin = {top: 20, right: 20, bottom: 30, left: 40},
+      width = (window.innerWidth) - margin.left - margin.right,
+      height = (window.innerHeight * 0.6) - margin.top - margin.bottom;
+      // width and height are calculated based on the window size
+
+      var x = d3.scale.ordinal().rangeRoundBands([0, width], .1, 1);
+      var y = d3.scale.linear().range([height, 0]);
+
+      // label for the y-axis will change depending on whether the data is normalized
+      var yLabel = "Military Spending in Billions (USD)";
+
+      // define the x and y axis
+      var xAxis = d3.svg.axis().scale(x).orient("bottom");
+      var yAxis = d3.svg.axis().scale(y).orient("left");
+
+      // define tooltip for each country
+      var tip = d3.tip()
+        .attr('class', 'd3-tip')
+        .offset([-10, 0])
+        .html(function(d) {
+          return d.country +
+            "<ul><li>Spending: $" + d.spending + "B</li>" +
+            "<li>Percent of GDP: " + d.percentage + "%</li></ul>";
+        });
+
+      // define the svg container that we will draw inside
+      var svg = d3.select("#chart").append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // add the tooltip to the SVG
+      svg.call(tip);
+
+      // import the dataset
+      d3.tsv("data/milexp.tsv", function(error, data) {
+        data.forEach(function(d) {
+          // make sure input treated as numbers and not strings
+          d.spending = +d.spending;
+          d.percentage = +d.percentage;
+          d.gdp = +d.gdp;
+        });
+
+        // map the real values to the x and y axis
+        x.domain(data.map(function(d) { return d.country; }));
+        y.domain([0, d3.max(data, function(d) { return d.spending; })]);
+
+        // draw the x axis in the SVG
+        svg.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+        // draw the y axis in the SVG
+        svg.append("g")
+          .attr("class", "y axis")
+          .call(yAxis)
+          .append("text")
+          .attr("transform", "rotate(-90)")
+          .attr("y", 6)
+          .attr("dy", ".71em")
+          .attr("id", "ylabel")
+          .style("text-anchor", "end")
+          .text(yLabel);
+
+        // insert the bars
+        svg.selectAll(".bar")
+          .data(data)
+          .enter().append("rect")
+          .attr("class", "bar")
+          .attr("x", function(d) { return x(d.country); })
+          .attr("width", x.rangeBand())
+          .attr("y", function(d) { return y(d.spending); })
+          .attr("height", function(d) { return height - y(d.spending); })
+          .on('mouseover', tip.show)
+          .on('mouseout', tip.hide);
+
+        // select the checkbox with normalize id
+        d3.select("#normalize")
+        .on("change", change);
+
+        // after 5 seconds, change to normalized view
+        var sortTimeout = setTimeout(function() {
+          d3.select("#normalize").property("checked", true).each(change);
+        }, 5000);
+
+        function change() {
+          // this method is called when the input is checked
+          clearTimeout(sortTimeout);
+
+          // Copy-on-write since tweens are evaluated after a delay.
+          var x0 = x.domain(data.sort(this.checked
+            ? function(a, b) { return d3.descending(a.percentage, b.percentage); }
+            : function(a, b) { return d3.descending(a.spending, b.spending); })
+            .map(function(d) { return d.country; }))
+            .copy();
+
+          var transition = svg.transition().duration(750),
+            delay = function(d, i) { return i * 50; };
+
+          // remove the y axis and recreate with new scale/label
+          transition.selectAll(".y").remove();
+
+          if (this.checked) {
+            // we are displaying the percentage of GDP
+            y.domain([0, d3.max(data, function(d) { return d.percentage; })]);
+            yLabel = "Military Spending as Percentage of GDP";
+
+            // reset the y-axis attribute as percentage of GDP
+            transition.selectAll(".bar")
+              .delay(delay)
+              .attr("x", function(d) { return x0(d.country); })
+              .attr("y", function(d) { return y(d.percentage); })
+              .attr("height", function(d) { return height - y(d.percentage); })
+              .attr("title", function(d) { return "Percentage of GDP: " + d.percentage + "%"; });
+          } else {
+            // we are displaying the total military spending
+            y.domain([0, d3.max(data, function(d) { return d.spending; })]);
+            yLabel = "Military Spending in Billions (USD)";
+
+            // reset the y-axis attribute as total spending
+            transition.selectAll(".bar")
+              .delay(delay)
+              .attr("x", function(d) { return x0(d.country); })
+              .attr("y", function(d) { return y(d.spending); })
+              .attr("height", function(d) { return height - y(d.spending); })
+              .attr("title", function(d) { return "Total Spending: " + d.percentage + " (USD)"; });
+          }
+
+          // redraw the x-axis
+          transition.select(".x.axis")
+            .call(xAxis)
+            .selectAll("g")
+            .delay(delay);
+
+          // redraw the y-axis
+          svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", ".71em")
+            .attr("id", "ylabel")
+            .style("text-anchor", "end")
+            .text(yLabel);
+        } // end change()
+      });
+    </script>
+  </div><!-- end container -->
+
+  <footer class="container-fluid">
+    <div class="row-fluid">
+        Data obtained from:
+        <ul>
+          <li>
+            <a href="http://portal.sipri.org/publications/pages/expenditures/country-search">Stockholm International Peace Research Institute</a>
+          </li>
+          <li>
+            <a href="http://www.imf.org/external/pubs/ft/weo/2014/02/weodata/weorept.aspx?sy=2012&ey=2019&scsm=1&ssd=1&sort=country&ds=.&br=1&pr1.x=41&pr1.y=3&c=512%2C668%2C914%2C672%2C612%2C946%2C614%2C137%2C311%2C962%2C213%2C674%2C911%2C676%2C193%2C548%2C122%2C556%2C912%2C678%2C313%2C181%2C419%2C867%2C513%2C682%2C316%2C684%2C913%2C273%2C124%2C868%2C339%2C921%2C638%2C948%2C514%2C943%2C218%2C686%2C963%2C688%2C616%2C518%2C223%2C728%2C516%2C558%2C918%2C138%2C748%2C196%2C618%2C278%2C624%2C692%2C522%2C694%2C622%2C142%2C156%2C449%2C626%2C564%2C628%2C565%2C228%2C283%2C924%2C853%2C233%2C288%2C632%2C293%2C636%2C566%2C634%2C964%2C238%2C182%2C662%2C453%2C960%2C968%2C423%2C922%2C935%2C714%2C128%2C862%2C611%2C135%2C321%2C716%2C243%2C456%2C248%2C722%2C469%2C942%2C253%2C718%2C642%2C724%2C643%2C576%2C939%2C936%2C644%2C961%2C819%2C813%2C172%2C199%2C132%2C733%2C646%2C184%2C648%2C524%2C915%2C361%2C134%2C362%2C652%2C364%2C174%2C732%2C328%2C366%2C258%2C734%2C656%2C144%2C654%2C146%2C336%2C463%2C263%2C528%2C268%2C923%2C532%2C738%2C944%2C578%2C176%2C537%2C534%2C742%2C536%2C866%2C429%2C369%2C433%2C744%2C178%2C186%2C436%2C925%2C136%2C869%2C343%2C746%2C158%2C926%2C439%2C466%2C916%2C112%2C664%2C111%2C826%2C298%2C542%2C927%2C967%2C846%2C443%2C299%2C917%2C582%2C544%2C474%2C941%2C754%2C446%2C698%2C666&s=NGDPD&grp=0&a=">International Monetary Fund</a>
+          </li>
+        </ul>
+    </div>
+  </footer>
+
+</body>

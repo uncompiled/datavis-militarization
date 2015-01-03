@@ -1,0 +1,12 @@
+{
+  "name": "datavis-militarization",
+  "license": "MIT",
+  "authors": [
+    { "name": "Chris Nguyen", "homepage": "http://www.uncompiled.org" }
+    ],
+  "private": true,
+  "dependencies": {
+    "d3": "latest",
+    "d3-tip": "~0.6.6"
+  }
+}
