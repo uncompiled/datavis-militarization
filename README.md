@@ -13,4 +13,4 @@ The data sources that I used come from:
 
 * Geographic choropleth based on militarization of every country.
 * Look at presenting number of active number of soldiers per country and ratio to total population
-* Incorporate data from the [International Institue for Strategic Studies](http://www.iiss.org/) included in The Military Balance report
+* Incorporate data from the [International Institute for Strategic Studies](http://www.iiss.org/) included in The Military Balance report
