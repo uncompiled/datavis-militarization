@@ -1,6 +1,6 @@
-# Visualizations of Global Militarization
+# Visualizations of Global Military Spending
 
-This project provides visualizations of publically available data sets on militarization.
+This project provides visualizations of publically available data sets on military spending.
 
 ## Data Sources
 
@@ -11,6 +11,5 @@ The data sources that I used come from:
 
 ## TO-DO
 
-* Geographic choropleth based on militarization of every country.
 * Look at presenting number of active number of soldiers per country and ratio to total population
 * Incorporate data from the [International Institute for Strategic Studies](http://www.iiss.org/) included in The Military Balance report
