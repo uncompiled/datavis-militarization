@@ -9,15 +9,46 @@
   <link rel="stylesheet" type="text/css" href="styles/d3.css">
 
   <!-- import javascript libraries-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
   <script src="scripts/datamaps.world.min.js"></script>
 </head>
 
 <body>
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+          <span class="sr-only">Toggle navigation</span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">Global Military Expenditure</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="navbar-collapse-1">
+        <ul class="nav navbar-nav navbar-right">
+          <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Select Chart <span class="caret"></span></a>
+            <ul class="dropdown-menu" role="menu">
+              <li><a href="military-spending.html">2013 Military Spending (Barchart)</a></li>
+              <li><a href="military-spending-gdp.html">2013 Military Spending as Percentage of GDP</a></li>
+              <li><a href="military-spending-percent-total.html">2013 Military Spending as Percentage of Government Budget</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+
   <div class="container-fluid">
     <div class="row-fluid">
-      <h3>2013 Global Military Spending as Percentage of Total Budget</h3>
+      <h4>Military expenditure by country as percentage of Government spending, 2013</h4>
       <div id="map" style="width:1000px;height:600px"></div>
     </div>
 
@@ -131,23 +162,14 @@
 
     </script>
 
-  <footer class="container-fluid">
-    <div class="row-fluid">
-      Data obtained from:
-      <ul>
-        <li>
-          <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a> - Military expenditure by country as percentage of Government spending, 1988-2013
-        </li>
-      </ul>
-    </div>
-    <div class="row-fluid">
-      Credits:
-      <ul>
-        <li>
-          World Map created with <a href="http://datamaps.github.io/">Datamaps</a>
-        </li>
-      </ul>
-    </div>
-  </footer>
+    <footer class="container-fluid">
+      <div class="row-fluid">
+        <p>
+          Data obtained from: <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a>
+          <br>
+          Credits: World Map created with <a href="http://datamaps.github.io/">Datamaps</a>
+        </p>
+      </div>
+    </footer>
 
 </body>
