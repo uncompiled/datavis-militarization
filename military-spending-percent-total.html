@@ -17,7 +17,7 @@
 <body>
   <div class="container-fluid">
     <div class="row-fluid">
-      <h3>2013 Global Military Spending as Percentage of GDP</h3>
+      <h3>2013 Global Military Spending as Percentage of Total Budget</h3>
       <div id="map" style="width:1000px;height:600px"></div>
     </div>
 
@@ -43,7 +43,7 @@
       // input: 0 to 10 percent of GDP
       // output: q0 through q8
       var quantize = d3.scale.quantize()
-        .domain([0, 11.3])
+        .domain([0, 27.4])
         .range(d3.range(7).map(function(i) { return "q" + i; }));
 
       var jsonMilExp = {};
@@ -69,19 +69,19 @@
                 return '<div class="hoverinfo"><strong>No data available for ' + geo.properties.name + '</strong></div>';
               return ['<div class="hoverinfo"><strong>',
               geo.properties.name,
-              ' spends ' + data.percentGDP + '% of their GDP on the military',
+              ' spends ' + data.percentGovSpending + '% of their total government budget on the military',
               '</strong></div>'].join('');
             }
           },
           responsive: true
         });
 
-        d3.tsv("data/milexp-global.tsv", function (error, data) {
+        d3.tsv("data/milexp-percent-total.tsv", function (error, data) {
           data.forEach(function(d) {
             // create data for map
             jsonMilExp[ d.country ] = {
-              fillKey: quantize(d.percentGDP),
-              percentGDP: d.percentGDP
+              fillKey: quantize(d.percentGovSpending),
+              percentGovSpending: d.percentGovSpending
             };
             map.updateChoropleth(jsonMilExp);
           });
@@ -136,7 +136,7 @@
       Data obtained from:
       <ul>
         <li>
-          <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a> - Military expenditure by country as percentage of gross domestic product, 1988-2013
+          <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a> - Military expenditure by country as percentage of Government spending, 1988-2013
         </li>
       </ul>
     </div>
