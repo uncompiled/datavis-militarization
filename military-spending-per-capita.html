@@ -11,6 +11,7 @@
   <!-- import javascript libraries-->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/numeral.js/1.4.5/numeral.min.js"></script>
   <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
   <script src="http://d3js.org/topojson.v1.min.js"></script>
   <script src="scripts/datamaps.world.min.js"></script>
@@ -49,7 +50,7 @@
 
   <div class="container-fluid">
     <div class="row-fluid">
-      <h4>Military expenditure by country as percentage of gross domestic product, 2013</h4>
+      <h4>Military expenditure per capita by country, 1988-2013 (in 2013 USD)</h4>
       <div id="map" style="width:1000px;height:600px"></div>
     </div>
 
@@ -75,7 +76,7 @@
       // input: 0 to 10 percent of GDP
       // output: q0 through q8
       var quantize = d3.scale.quantize()
-        .domain([0, 11.3])
+        .domain([0, 2902])
         .range(d3.range(7).map(function(i) { return "q" + i; }));
 
       var jsonMilExp = {};
@@ -101,19 +102,19 @@
                 return '<div class="hoverinfo"><strong>No data available for ' + geo.properties.name + '</strong></div>';
               return ['<div class="hoverinfo"><strong>',
               geo.properties.name,
-              ' spends ' + data.percentGDP + '% of their GDP on the military',
+              ' spends $' + parseInt(data.perCapita) + ' USD per person',
               '</strong></div>'].join('');
             }
           },
           responsive: true
         });
 
-        d3.tsv("data/milexp-global.tsv", function (error, data) {
+        d3.tsv("data/milexp-per-capita.tsv", function (error, data) {
           data.forEach(function(d) {
             // create data for map
             jsonMilExp[ d.country ] = {
-              fillKey: quantize(d.percentGDP),
-              percentGDP: d.percentGDP
+              fillKey: quantize(d.perCapita),
+              perCapita: d.perCapita
             };
             map.updateChoropleth(jsonMilExp);
           });
@@ -143,17 +144,34 @@
             .attr('height', legendBarHeight)
             .attr('fill', function(d){ return d; });
 
-        // draw the legend text labels
+        // draw text labels for lower quantized boundary
         d3.select('.legend').selectAll('.legend')
         .data(colorScale)
         .enter()
           .append('text')
             .text(function(d,i){
               var quantizedRange = quantize.invertExtent('q'+i);
-              return quantizedRange[0].toFixed(1) + ' - ' +
-              quantizedRange[1].toFixed(1) + '%';
+              return numeral(quantizedRange[0].toFixed(0)).format('0,0');
             })
-            .attr('x', legendOffsetX+(legendBarWidth*1.25))
+            .attr('x', function(d,i) {
+              // if there is a mathematically beautiful way to draw the legend,
+              // i need to know.  my crude attempt at making the legend pretty
+              // involves splitting the label up into 4 columns
+              // and drawing them separately
+              var labelOffset = 0;
+              var quantizedRange = quantize.invertExtent('q'+i);
+
+              // this is gross, but i didn't want a monotype font
+              // this will need to be refactored
+              if (quantizedRange[0] < 1000) {
+                labelOffset += 9;
+                if (quantizedRange[0] < 10) {
+                  labelOffset += 11;
+                }
+              }
+
+              return legendOffsetX+(legendBarWidth*1.25) + labelOffset;
+            })
             .attr('y', function(d,i){
               return legendOffsetY + (legendBarHeight*0.9) + legendBarHeight*i;
             })
@@ -161,18 +179,75 @@
             .attr("font-size", "10px")
             .attr("fill", "black");
 
+        // draw hyphen for label
+        d3.select('.legend').selectAll('.legend')
+          .data(colorScale)
+          .enter()
+          .append('text')
+          .text('-')
+          .attr('x', function(d,i) {
+            var labelOffset = 30;
+            return legendOffsetX+(legendBarWidth*1.25) + labelOffset;
+          })
+          .attr('y', function(d,i){
+            return legendOffsetY + (legendBarHeight*0.9) + legendBarHeight*i;
+          })
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "10px")
+          .attr("fill", "black");
+
+        // draw text labels for upper quantized boundary
+        d3.select('.legend').selectAll('.legend')
+          .data(colorScale)
+          .enter()
+          .append('text')
+          .text(function(d,i){
+            var quantizedRange = quantize.invertExtent('q'+i);
+            return numeral(quantizedRange[1].toFixed(0)).format('0,0');
+          })
+          .attr('x', function(d,i) {
+            var labelOffset = 40;
+            var quantizedRange = quantize.invertExtent('q'+i);
+            if (quantizedRange[1] < 1000) labelOffset += 8;
+
+            return legendOffsetX+(legendBarWidth*1.25) + labelOffset;
+          })
+          .attr('y', function(d,i){
+            return legendOffsetY + (legendBarHeight*0.9) + legendBarHeight*i;
+          })
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "10px")
+          .attr("fill", "black");
+
+        // draw USD for label
+        d3.select('.legend').selectAll('.legend')
+          .data(colorScale)
+          .enter()
+          .append('text')
+          .text('USD')
+          .attr('x', function(d,i) {
+            var labelOffset = 70;
+            return legendOffsetX+(legendBarWidth*1.25) + labelOffset;
+          })
+          .attr('y', function(d,i){
+            return legendOffsetY + (legendBarHeight*0.9) + legendBarHeight*i;
+          })
+          .attr("font-family", "sans-serif")
+          .attr("font-size", "10px")
+          .attr("fill", "black");
+
     </script>
 
-  <footer class="container-fluid">
-    <div class="row-fluid">
-      <p>
-        Data obtained from: <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a>
-        <br>
-        Credits: World Map created with <a href="http://datamaps.github.io/">Datamaps</a>
-        <br>
-        Created by: <a href="http://www.uncompiled.org">@uncompiled</a>
-      </p>
-    </div>
-  </footer>
+    <footer class="container-fluid">
+      <div class="row-fluid">
+        <p>
+          Data obtained from: <a href="http://www.sipri.org/research/armaments/milex/milex_database">Stockholm International Peace Research Institute</a>
+          <br>
+          Credits: World Map created with <a href="http://datamaps.github.io/">Datamaps</a>
+          <br>
+          Created by: <a href="http://www.uncompiled.org">@uncompiled</a>
+        </p>
+      </div>
+    </footer>
 
 </body>
