@@ -1,7 +1,7 @@
 {
   "name": "datavis-militarization",
   "devDependencies": {
-    "serve": "^6.0.6"
+    "serve": "^7.0.0"
   },
   "engines": {
     "node": ">=0.10.0"
